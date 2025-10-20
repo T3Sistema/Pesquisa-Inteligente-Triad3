@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 // which is compatible with the LanguageCode type, resolving the error on line 18.
 const languages = [
     { code: 'pt', flag: 'https://flagcdn.com/w40/br.png', name: 'Português' },
-    { code: 'en', flag: 'https://flagcdn.com/w40/gb.png', name: 'English' },
+    { code: 'en', flag: 'https://flagcdn.com/w40/us.png', name: 'English' },
     { code: 'es', flag: 'https://flagcdn.com/w40/es.png', name: 'Español' },
 ] as const;
 
