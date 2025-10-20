@@ -6,6 +6,7 @@ import type { Campaign, Question } from '../../types';
 import { QuestionType } from '../../types';
 import { CheckCircleIcon } from '../../components/icons/CheckCircleIcon';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 
@@ -13,7 +14,10 @@ const SurveyPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { language, t, translateCampaign, isTranslating: isLangTranslating } = useLanguage();
+
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [translatedCampaign, setTranslatedCampaign] = useState<Campaign | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [hasAgreedLgpd, setHasAgreedLgpd] = useState(false);
@@ -48,6 +52,16 @@ const SurveyPage: React.FC = () => {
     fetchCampaign();
   }, [id, navigate]);
 
+  useEffect(() => {
+    if (campaign && language !== 'pt') {
+      translateCampaign(campaign, language).then(setTranslatedCampaign);
+    } else {
+      setTranslatedCampaign(null); // Reset if language is back to Portuguese
+    }
+  }, [language, campaign, translateCampaign]);
+  
+  const displayCampaign = translatedCampaign || campaign;
+
   const handleAnswerChange = (questionId: string, value: any, type: QuestionType) => {
     if (type === QuestionType.CHECKBOX) {
         const currentAnswers = answers[questionId] || [];
@@ -63,7 +77,7 @@ const SurveyPage: React.FC = () => {
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     
-    if (campaign && user) {
+    if (campaign && user) { // Use original campaign for submission
         try {
             const formattedAnswers = Object.keys(answers).map(questionId => ({
                 questionId,
@@ -89,12 +103,12 @@ const SurveyPage: React.FC = () => {
   };
   
   const handleNext = () => {
-    if (!campaign) return;
+    if (!displayCampaign) return;
 
-    const currentQuestion = campaign.questions[currentQuestionIndex];
+    const currentQuestion = displayCampaign.questions[currentQuestionIndex];
     const answer = answers[currentQuestion.id];
     let jumpToId: string | null | undefined = null;
-    const isLastQuestion = currentQuestionIndex >= campaign.questions.length - 1;
+    const isLastQuestion = currentQuestionIndex >= displayCampaign.questions.length - 1;
 
     if ((currentQuestion.type === QuestionType.MULTIPLE_CHOICE || 
          currentQuestion.type === QuestionType.IMAGE_CHOICE ||
@@ -119,7 +133,7 @@ const SurveyPage: React.FC = () => {
             return;
         }
 
-        const nextQuestionIndex = campaign.questions.findIndex(q => q.id === jumpToId);
+        const nextQuestionIndex = displayCampaign.questions.findIndex(q => q.id === jumpToId);
         if (nextQuestionIndex !== -1) {
             setCurrentQuestionIndex(nextQuestionIndex);
             return;
@@ -129,7 +143,6 @@ const SurveyPage: React.FC = () => {
     if (!isLastQuestion) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // If it's the last question and there's no jump logic, submit.
       handleSubmit();
     }
   };
@@ -140,31 +153,39 @@ const SurveyPage: React.FC = () => {
     }
   };
 
-  if (isLoading || !campaign) {
+  if (isLoading || !displayCampaign) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-dark-background flex items-center justify-center">
-        <LoadingSpinner text="Carregando pesquisa" />
+        <LoadingSpinner text={t('loadingSurvey')} />
       </div>
     );
+  }
+
+  if (isLangTranslating) {
+    return (
+       <div className="min-h-screen bg-gray-100 dark:bg-dark-background flex items-center justify-center">
+        <LoadingSpinner text={t('translating')} />
+      </div>
+    )
   }
   
   if (!hasAgreedLgpd) {
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-dark-background text-light-text dark:text-dark-text">
-            <Header title="Termos da Pesquisa" />
+            <Header title={t('surveyTerms')} />
             <main className="p-4 sm:p-8 max-w-3xl mx-auto">
                 <div className="bg-light-background dark:bg-dark-card p-6 sm:p-8 rounded-xl shadow-lg">
-                    <h1 className="text-2xl font-bold text-light-primary mb-4">Antes de começar...</h1>
+                    <h1 className="text-2xl font-bold text-light-primary mb-4">{t('beforeYouStart')}</h1>
                     <p className="mb-4 text-gray-600 dark:text-gray-400">Por favor, leia e concorde com os termos de uso de dados para participar desta campanha.</p>
                     <div className="p-4 border border-light-border dark:border-dark-border rounded-md bg-gray-50 dark:bg-dark-background max-h-60 overflow-y-auto mb-6">
                         <h2 className="font-bold mb-2">Termos de Privacidade e Uso de Dados (LGPD)</h2>
-                        <p className="text-sm whitespace-pre-wrap">{campaign.lgpdText}</p>
+                        <p className="text-sm whitespace-pre-wrap">{displayCampaign.lgpdText}</p>
                     </div>
                     <button
                         onClick={() => setHasAgreedLgpd(true)}
                         className="w-full bg-gradient-to-r from-gradient-cyan to-gradient-blue text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity"
                     >
-                        Concordo e quero participar
+                        {t('agreeAndParticipate')}
                     </button>
                 </div>
             </main>
@@ -172,7 +193,7 @@ const SurveyPage: React.FC = () => {
     );
   }
 
-  if (campaign.collectUserInfo && !hasProvidedInfo) {
+  if (displayCampaign.collectUserInfo && !hasProvidedInfo) {
     const ageRanges = [
         { label: '-18', value: '17' },
         { label: '18-24', value: '21' },
@@ -181,15 +202,15 @@ const SurveyPage: React.FC = () => {
     ];
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-dark-background text-light-text dark:text-dark-text">
-            <Header title="Identificação" />
+            <Header title={t('participantId')} />
             <main className="p-4 sm:p-8 max-w-3xl mx-auto">
                 <div className="bg-light-background dark:bg-dark-card p-6 sm:p-8 rounded-xl shadow-lg">
-                    <h1 className="text-2xl font-bold text-light-primary mb-2">Identificação do Participante</h1>
-                    <p className="mb-6 text-gray-600 dark:text-gray-400">Por favor, preencha seus dados para continuar.</p>
+                    <h1 className="text-2xl font-bold text-light-primary mb-2">{t('participantId')}</h1>
+                    <p className="mb-6 text-gray-600 dark:text-gray-400">{t('fillDataToContinue')}</p>
                     <form onSubmit={(e) => { 
                         e.preventDefault(); 
                         if (!userAge) {
-                            setInfoError('Por favor, selecione sua faixa etária.');
+                            setInfoError(t('selectAgeRange'));
                             return;
                         }
                         setInfoError('');
@@ -197,7 +218,7 @@ const SurveyPage: React.FC = () => {
                     }}>
                         <div className="space-y-4">
                             <div>
-                                <label htmlFor="userName" className="block text-sm font-medium mb-1">Nome Completo</label>
+                                <label htmlFor="userName" className="block text-sm font-medium mb-1">{t('fullName')}</label>
                                 <input
                                     id="userName"
                                     type="text"
@@ -208,7 +229,7 @@ const SurveyPage: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-2">Faixa Etária</label>
+                                <label className="block text-sm font-medium mb-2">{t('ageRange')}</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {ageRanges.map((range) => (
                                         <button
@@ -230,7 +251,7 @@ const SurveyPage: React.FC = () => {
                                 </div>
                             </div>
                             <div>
-                                <label htmlFor="userPhone" className="block text-sm font-medium mb-1">Telefone (WhatsApp)</label>
+                                <label htmlFor="userPhone" className="block text-sm font-medium mb-1">{t('phone')}</label>
                                 <input
                                     id="userPhone"
                                     type="tel"
@@ -244,7 +265,7 @@ const SurveyPage: React.FC = () => {
                             {infoError && <p className="text-sm text-center text-error font-medium">{infoError}</p>}
                         </div>
                         <button type="submit" className="w-full bg-gradient-to-r from-gradient-cyan to-gradient-blue text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity mt-6">
-                            Iniciar Pesquisa
+                            {t('startSurvey')}
                         </button>
                     </form>
                 </div>
@@ -253,9 +274,9 @@ const SurveyPage: React.FC = () => {
     );
   }
 
-  const currentQuestion = campaign.questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / campaign.questions.length) * 100;
-  const isLastQuestion = currentQuestionIndex >= campaign.questions.length - 1;
+  const currentQuestion = displayCampaign.questions[currentQuestionIndex];
+  const progress = ((currentQuestionIndex + 1) / displayCampaign.questions.length) * 100;
+  const isLastQuestion = currentQuestionIndex >= displayCampaign.questions.length - 1;
 
   const renderQuestion = (question: Question) => {
 
@@ -356,12 +377,12 @@ const SurveyPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-dark-background text-light-text dark:text-dark-text">
-      <Header title="Respondendo Pesquisa" />
+      <Header title={t('answeringSurvey')} />
       <main className="p-4 sm:p-8 max-w-3xl mx-auto">
         <div className="bg-light-background dark:bg-dark-card p-6 sm:p-8 rounded-xl shadow-lg">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-light-primary">{campaign.name}</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">{campaign.description}</p>
+            <h1 className="text-3xl font-bold text-light-primary">{displayCampaign.name}</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">{displayCampaign.description}</p>
           </div>
           
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-6">
@@ -381,7 +402,7 @@ const SurveyPage: React.FC = () => {
                 disabled={currentQuestionIndex === 0}
                 className="bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-2 px-6 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Anterior
+                {t('previous')}
               </button>
               
               <button
@@ -393,7 +414,7 @@ const SurveyPage: React.FC = () => {
                     : 'bg-gradient-to-r from-gradient-cyan to-gradient-blue'
                 } text-white font-bold py-2 px-6 rounded-lg hover:opacity-90 transition-opacity`}
               >
-                {isLastQuestion ? 'Finalizar' : 'Próximo'}
+                {isLastQuestion ? t('finish') : t('next')}
               </button>
             </div>
           </form>
