@@ -51,7 +51,6 @@ const AssignCampaignsModal: React.FC<AssignCampaignsModalProps> = ({ isOpen, onC
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Vincular Campanhas a ${researcher.name}`}>
-             <style>{`.input-style { background-color: white; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.5rem 0.75rem; } .dark .input-style { background-color: #1F2937; border-color: #374151; }`}</style>
              <form onSubmit={handleSubmit}>
                 <div className="relative mb-4">
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />

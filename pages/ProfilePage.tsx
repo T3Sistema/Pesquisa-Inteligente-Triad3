@@ -58,7 +58,6 @@ const ProfilePage: React.FC = () => {
         <div className="min-h-screen bg-gray-100 dark:bg-dark-background text-light-text dark:text-dark-text">
             <Header title="Meu Perfil" />
             <main className="p-4 sm:p-8 max-w-4xl mx-auto">
-                <style>{`.input-style { background-color: white; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.5rem 0.75rem; } .dark .input-style { background-color: #1F2937; border-color: #374151; }`}</style>
                 
                  <div className="mb-6">
                     <Link

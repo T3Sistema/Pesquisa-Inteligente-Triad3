@@ -307,7 +307,6 @@ const AdminCompaniesPage: React.FC = () => {
 
   return (
     <div>
-       <style>{`.input-style { background-color: white; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.5rem 0.75rem; } .dark .input-style { background-color: #1F2937; border-color: #374151; }`}</style>
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold">Gerenciar Empresas</h1>
         <div className="flex items-center gap-4 flex-wrap">

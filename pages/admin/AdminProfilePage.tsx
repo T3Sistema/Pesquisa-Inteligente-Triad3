@@ -51,7 +51,6 @@ const AdminProfilePage: React.FC = () => {
 
     return (
         <div>
-            <style>{`.input-style { background-color: white; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.5rem 0.75rem; } .dark .input-style { background-color: #1F2937; border-color: #374151; }`}</style>
             
             <div className="mb-8">
                 <Link

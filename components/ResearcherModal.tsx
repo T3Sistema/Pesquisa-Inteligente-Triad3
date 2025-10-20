@@ -57,7 +57,6 @@ const ResearcherModal: React.FC<ResearcherModalProps> = ({ isOpen, onClose, onSa
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={researcher ? 'Editar Pesquisador' : 'Adicionar Novo Pesquisador'}>
-             <style>{`.input-style { background-color: white; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.5rem 0.75rem; } .dark .input-style { background-color: #1F2937; border-color: #374151; }`}</style>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="flex items-center gap-4">
                     <img
