@@ -22,6 +22,7 @@ const SurveyPage: React.FC = () => {
   const [userAge, setUserAge] = useState('');
   const [hasProvidedInfo, setHasProvidedInfo] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [infoError, setInfoError] = useState('');
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -172,6 +173,12 @@ const SurveyPage: React.FC = () => {
   }
 
   if (campaign.collectUserInfo && !hasProvidedInfo) {
+    const ageRanges = [
+        { label: '-18', value: '17' },
+        { label: '18-24', value: '21' },
+        { label: '25-44', value: '25' },
+        { label: '45+', value: '45' },
+    ];
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-dark-background text-light-text dark:text-dark-text">
             <Header title="Identificação" />
@@ -179,7 +186,15 @@ const SurveyPage: React.FC = () => {
                 <div className="bg-light-background dark:bg-dark-card p-6 sm:p-8 rounded-xl shadow-lg">
                     <h1 className="text-2xl font-bold text-light-primary mb-2">Identificação do Participante</h1>
                     <p className="mb-6 text-gray-600 dark:text-gray-400">Por favor, preencha seus dados para continuar.</p>
-                    <form onSubmit={(e) => { e.preventDefault(); setHasProvidedInfo(true); }}>
+                    <form onSubmit={(e) => { 
+                        e.preventDefault(); 
+                        if (!userAge) {
+                            setInfoError('Por favor, selecione sua faixa etária.');
+                            return;
+                        }
+                        setInfoError('');
+                        setHasProvidedInfo(true); 
+                    }}>
                         <div className="space-y-4">
                             <div>
                                 <label htmlFor="userName" className="block text-sm font-medium mb-1">Nome Completo</label>
@@ -193,17 +208,26 @@ const SurveyPage: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label htmlFor="userAge" className="block text-sm font-medium mb-1">Idade</label>
-                                <input
-                                    id="userAge"
-                                    type="number"
-                                    value={userAge}
-                                    onChange={(e) => setUserAge(e.target.value)}
-                                    placeholder="Sua idade"
-                                    min="1"
-                                    className="w-full px-3 py-2 bg-white dark:bg-dark-background border border-light-border dark:border-dark-border rounded-md focus:outline-none focus:ring-2 focus:ring-light-primary"
-                                    required
-                                />
+                                <label className="block text-sm font-medium mb-2">Faixa Etária</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    {ageRanges.map((range) => (
+                                        <button
+                                            key={range.label}
+                                            type="button"
+                                            onClick={() => {
+                                                setUserAge(range.value);
+                                                setInfoError('');
+                                            }}
+                                            className={`text-center p-3 rounded-lg border-2 transition-colors duration-200 ${
+                                                userAge === range.value
+                                                    ? 'bg-light-primary border-light-primary text-white font-bold'
+                                                    : 'bg-white dark:bg-dark-background border-light-border dark:border-dark-border hover:border-light-primary/50'
+                                            }`}
+                                        >
+                                            {range.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                             <div>
                                 <label htmlFor="userPhone" className="block text-sm font-medium mb-1">Telefone (WhatsApp)</label>
@@ -217,6 +241,7 @@ const SurveyPage: React.FC = () => {
                                     required
                                 />
                             </div>
+                            {infoError && <p className="text-sm text-center text-error font-medium">{infoError}</p>}
                         </div>
                         <button type="submit" className="w-full bg-gradient-to-r from-gradient-cyan to-gradient-blue text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity mt-6">
                             Iniciar Pesquisa
