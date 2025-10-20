@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import ThemeToggle from './ThemeToggle';
+import LanguageSwitcher from './LanguageSwitcher';
+import { UserRole } from '../types';
 import { UserCircleIcon } from './icons/UserCircleIcon';
 import { ArrowLeftOnRectangleIcon } from './icons/ArrowLeftOnRectangleIcon';
 import { Bars3Icon } from './icons/Bars3Icon';
@@ -54,6 +56,7 @@ const Header: React.FC<{ title: string; onToggleSidebar?: () => void }> = ({ tit
         <h1 className="text-xl font-bold">{title}</h1>
       </div>
       <div className="flex items-center gap-4">
+        {user && user.role === UserRole.USER && <LanguageSwitcher />}
         <ThemeToggle />
         {user && (
           <div className="relative" ref={menuRef}>
